@@ -1,6 +1,7 @@
 package com.sunnyday.cqjz;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
 import com.jcraft.jsch.ChannelSftp;
@@ -69,6 +70,10 @@ public class FileProcess implements Job {
         final String prefix = properties.getProperty("src.file.prefix");
         LOGGER.info("文件前缀：" + prefix);
         String srcFileDate = properties.getProperty("src.file.date");
+        // 解压文件路径
+        String unZipPath = properties.getProperty("unzip.path");
+
+        delFiles(unZipPath);
 
         // 连接服务器
         SSHLoginInfo.Builder builder = new SSHLoginInfo.Builder();
@@ -104,7 +109,7 @@ public class FileProcess implements Job {
                 continue;
             }
             remoteUtil.fileDownload(srcDir + File.separator + filename, destDir);
-            this.unzipFile(destDir + File.separator + filename);
+            this.unzipFile(destDir + File.separator + filename, unZipPath);
             atomicInteger.incrementAndGet();
         }
         LOGGER.info("复制文件个数：" + atomicInteger.get());
@@ -116,13 +121,40 @@ public class FileProcess implements Job {
      *
      * @param filePath
      */
-    private void unzipFile(String filePath) {
+    private void unzipFile(String filePath, String unZipPath) {
         File file = new File(filePath);
         if (!file.exists()) {
             return;
         }
-        final File unzip = ZipUtil.unzip(file, file.getParentFile(), StandardCharsets.UTF_8);
+        File unZipFile = new File(unZipPath);
+        if (!unZipFile.exists()) {
+            FileUtil.mkdir(unZipFile);
+        }
+        if (StrUtil.isBlank(unZipPath)) {
+            ZipUtil.unzip(file, file.getParentFile(), StandardCharsets.UTF_8);
+        } else {
+            ZipUtil.unzip(filePath, unZipPath, StandardCharsets.UTF_8);
+        }
         LOGGER.info("文件解压成功：" + file.getName());
+    }
+
+    /**
+     * 删除文件
+     *
+     * @param filePath
+     */
+    private void delFiles(String filePath) {
+        File file = new File(filePath);
+        if (file.isDirectory()) {
+            final File[] files = file.listFiles();
+            if (files == null || files.length == 0) {
+                return;
+            }
+            for (File file1 : files) {
+                FileUtil.del(file1);
+            }
+        }
+        LOGGER.info("清空解压目录下文件");
     }
 
 }

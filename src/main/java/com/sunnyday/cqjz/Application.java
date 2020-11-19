@@ -2,6 +2,7 @@ package com.sunnyday.cqjz;
 
 import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.util.StrUtil;
+import com.sunnyday.cqjz.utils.PropertiesUtil;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
@@ -18,9 +19,7 @@ public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) throws IOException, SchedulerException {
-        ClassPathResource resource = new ClassPathResource("file.properties");
-        Properties properties = new Properties();
-        properties.load(resource.getStream());
+        Properties properties = PropertiesUtil.get();
         FileProcess fileProcess = new FileProcess();
         fileProcess.setProperties(properties);
         final String fileCron = properties.getProperty("copy.file.corn");

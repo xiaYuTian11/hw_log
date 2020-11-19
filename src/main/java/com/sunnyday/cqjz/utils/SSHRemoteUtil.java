@@ -87,6 +87,7 @@ public class SSHRemoteUtil {
         if (session != null) {
             // 如果session不为空,调用session的关闭连接的方法
             session.disconnect();
+            logined = false;
         }
         LOGGER.info("SSH close success ...");
     }
